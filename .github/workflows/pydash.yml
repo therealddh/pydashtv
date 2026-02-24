@@ -1,0 +1,37 @@
+name: Run Python Script Every 30 Min
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
+  workflow_dispatch:        # Allows you to run it manually for testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Requirements
+        run: |
+          pip install requests base64 Cryptodome
+
+      - name: Download and Run Script
+        env:
+          SCRIPT_URL: ${{ secrets.DASHTV }}
+        run: |
+          curl -L $SCRIPT_URL -o script.py
+          python script.py > dashtv.m3u
+
+      - name: Commit and Push output
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add file.txt
+          git commit -m "Update output dastv.m3u" || echo "No changes to commit"
+          git push
