@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Requirements
         run: |
-          pip install requests base64 Cryptodome
+          pip install requests Cryptodome
 
       - name: Download and Run Script
         env:
