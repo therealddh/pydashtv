@@ -25,9 +25,9 @@ jobs:
         env:
           SCRIPT_URL: ${{ secrets.DASHTV }}
         run: |
-          REAL_URL=$(echo "$SCRIPT_URL" | base64 --decode)
+          REAL_URL=$(echo "$SCRIPT_URL" | base64 -d --ignore-garbage)
           curl -L $REAL_URL -o script.py
-          python script.py | base64 -w 0 > dashtv.m3u
+          python script.py > dashtv.m3u
 
       - name: Commit and Push output
         run: |
