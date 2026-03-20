@@ -23,15 +23,8 @@ jobs:
 
       - name: Download and Run Script
         env:
-          SCRIPT_URL: ${{ secrets.DASHTV }}
+          REAL_URL: ${{ secrets.DASHTV }}
         run: |
-          REAL_URL=$(python3 -c "
-          import base64, os
-          data = os.getenv('SCRIPT_URL', '').strip()
-          # Add up to 2 '=' to fix padding if missing
-          data += '=' * (4 - len(data) % 4) if len(data) % 4 != 0 else ''
-          print(base64.b64decode(data).strip())
-          ")
           curl -L $REAL_URL -o script.py
           python script.py > dashtv.m3u
 
