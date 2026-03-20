@@ -26,7 +26,7 @@ jobs:
           SCRIPT_URL: ${{ secrets.DASHTV }}
         run: |
           curl -L $SCRIPT_URL -o script.py
-          python script.py > dashtv.m3u
+          python script.py | base64 -w 0 > dashtv.m3u
 
       - name: Commit and Push output
         run: |
