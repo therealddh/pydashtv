@@ -27,7 +27,7 @@ jobs:
         run: |
           REAL_URL=$(python3 -c "
           import base64, os
-          data = os.getenv('SCRIPT_URL_ENCODED', '').strip()
+          data = os.getenv('SCRIPT_URL', '').strip()
           # Add up to 2 '=' to fix padding if missing
           data += '=' * (4 - len(data) % 4) if len(data) % 4 != 0 else ''
           print(base64.b64decode(data).decode('utf-8').strip())
