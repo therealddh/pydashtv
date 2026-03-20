@@ -25,7 +25,7 @@ jobs:
         env:
           SCRIPT_URL: ${{ secrets.DASHTV }}
         run: |
-          REAL_URL=$(echo "$SCRIPT_URL" | base64 -d --ignore-garbage)
+          REAL_URL=$(python3 -c "import base64, os; print(base64.b64decode(os.getenv('SCRIPT_URL')).decode('utf-8').strip())")
           curl -L $REAL_URL -o script.py
           python script.py > dashtv.m3u
 
