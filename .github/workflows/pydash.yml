@@ -26,7 +26,7 @@ jobs:
           REAL_URL: ${{ secrets.DASHTV }}
         run: |
           curl -L $REAL_URL -o script.py
-          python script.py > dashtv.m3u
+          python script.py > cookie.txt
 
       - name: Commit and Push output
         run: |
