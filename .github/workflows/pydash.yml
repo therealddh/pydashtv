@@ -2,7 +2,7 @@ name: Run Python Script Every 10 Hours
 
 on:
   schedule:
-    - cron: '0 */10 * * *'
+    - cron: '0 */5 * * *'
   workflow_dispatch:        # Allows you to run it manually for testing
 
 jobs:
