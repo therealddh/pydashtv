@@ -15,12 +15,12 @@ async function init() {
   player.configure({
     drm: {
       clearKeys: {
-        "YOUR_KID_HEX": "YOUR_KEY_HEX"
+        "e24e2e21849f3b0390aec79c9038392a": "37e5b4cdca638677d02c6ece299e76cd"
       }
     }
   });
 
-  await player.load('https://example.com/manifest.mpd');
+  await player.load('https://todtv-vod-prod-a-01.akamaized.net/Content/DASH_DT/LLCU/0ace6fef-61ab-4f80-b330-e1a3ef77ab72/hdntl=exp=1782627976~acl=*%2fContent%2fDASH_DT%2fLLCU%2f0ace6fef-61ab-4f80-b330-e1a3ef77ab72%2f*~id=e97602de-a94d-4d1a-adf3-de671555e305~data=hdntl,aXA9ODYuOTguMTUyLjE4Mg~hmac=64023c619961e3b325dc2d4777521f5a7f7dee4382dc9659cf7eb0cde3d56c0e/manifest.mpd');
 }
 
 init().catch(console.error);
