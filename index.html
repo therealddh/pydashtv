@@ -1,52 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Shaka DASH ClearKey Player</title>
+<meta charset="utf-8">
+<title>Fixed Shaka ClearKey Player</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+
+<style>
+body {
+  background:#111;
+  color:white;
+  font-family:Arial;
+  margin:0;
+  padding:0;
+}
+
+.container {
+  max-width:520px;
+  margin:20px auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:10px;
+}
+
+input,button {
+  padding:12px;
+  font-size:14px;
+  border-radius:6px;
+  border:none;
+}
+
+button {
+  background:#007bff;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover {
+  background:#0056b3;
+}
+
+video {
+  width:100%;
+  margin-top:10px;
+  background:black;
+}
+</style>
 </head>
+
 <body>
 
-<video id="video"
-       width="100%"
-       controls
-       autoplay></video>
+<div class="container">
+  <input id="mpd" placeholder="https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/xperu6ixu9/out/v1/31d30c91fc65458789b84209d3fa22e4/cenc.mpd">
+  <input id="kid" placeholder="1f68713028d439ec03be07f56c1d6213">
+  <input id="key" placeholder="20093db6455160fffed4c394def3193d">
+  <button onclick="playStream()">Play Stream</button>
+
+  <video id="video" controls autoplay></video>
+</div>
 
 <script>
+let player = null;
+
+function cleanHex(v) {
+  return v.replace(/-/g, '').trim().toLowerCase();
+}
+
 async function initPlayer() {
-    const video = document.getElementById('video');
+  const video = document.getElementById('video');
 
-    const player = new shaka.Player(video);
+  shaka.polyfill.installAll();
 
-    // Replace with your MPD URL
-    const manifestUri = "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/xperu6ixu9/out/v1/31d30c91fc65458789b84209d3fa22e4/cenc.mpd";
+  if (!shaka.Player.isBrowserSupported()) {
+    alert("Browser not supported for Shaka Player");
+    return;
+  }
 
-    // Replace with your KID and KEY (hex)
-    player.configure({
-        drm: {
-            clearKeys: {
-                "1f68713028d439ec03be07f56c1d6213": "20093db6455160fffed4c394def3193d"
-            }
-        }
-    });
+  player = new shaka.Player(video);
 
-    try {
-        await player.load(manifestUri);
-        console.log("Loaded successfully");
-    } catch (e) {
-        console.error(e);
+  player.addEventListener('error', (e) => {
+    console.error("Shaka Error:", e.detail);
+  });
+
+  console.log("Player initialized");
+}
+
+async function playStream() {
+  if (!player) {
+    alert("Player not initialized");
+    return;
+  }
+
+  const mpd = document.getElementById('mpd').value.trim();
+  const kid = cleanHex(document.getElementById('kid').value);
+  const key = cleanHex(document.getElementById('key').value);
+
+  if (!mpd || !kid || !key) {
+    alert("Please fill MPD, KID, KEY");
+    return;
+  }
+
+  if (kid.length !== 32 || key.length !== 32) {
+    alert("KID and KEY must be 32 hex characters");
+    return;
+  }
+
+  // Clear previous stream
+  try {
+    await player.unload();
+  } catch (e) {}
+
+  // Configure ClearKey DRM
+  player.configure({
+    drm: {
+      clearKeys: {
+        [kid]: key
+      }
+    },
+    streaming: {
+      bufferingGoal: 20,
+      rebufferingGoal: 2
     }
+  });
+
+  try {
+    await player.load(mpd);
+    console.log("Stream loaded successfully");
+  } catch (e) {
+    console.error("Load failed:", e);
+    alert("Error: " + e.message);
+  }
 }
 
-shaka.polyfill.installAll();
-
-if (shaka.Player.isBrowserSupported()) {
-    initPlayer();
-} else {
-    console.error("Browser not supported");
-}
+window.addEventListener('load', initPlayer);
 </script>
 
 </body>
