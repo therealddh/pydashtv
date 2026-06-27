@@ -1,44 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
+    <meta charset="utf-8">
+    <title>Shaka DASH ClearKey Player</title>
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
 </head>
-
 <body>
 
-<div data-shaka-player-container
-     data-shaka-player-cast-receiver-id=""
-     style="max-width:100%;">
-
-  <video data-shaka-player
-         id="video"
-         autoplay></video>
-
-</div>
+<video id="video"
+       width="100%"
+       controls
+       autoplay></video>
 
 <script>
-async function init() {
-  const video = document.getElementById("video");
-  const player = new shaka.Player(video);
+async function initPlayer() {
+    const video = document.getElementById('video');
 
-  player.configure({
-    drm: {
-      clearKeys: {
-        "1f68713028d439ec03be07f56c1d6213": "20093db6455160fffed4c394def3193d"
-      }
+    const player = new shaka.Player(video);
+
+    // Replace with your MPD URL
+    const manifestUri = "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/xperu6ixu9/out/v1/31d30c91fc65458789b84209d3fa22e4/cenc.mpd";
+
+    // Replace with your KID and KEY (hex)
+    player.configure({
+        drm: {
+            clearKeys: {
+                "1f68713028d439ec03be07f56c1d6213": "20093db6455160fffed4c394def3193d"
+            }
+        }
+    });
+
+    try {
+        await player.load(manifestUri);
+        console.log("Loaded successfully");
+    } catch (e) {
+        console.error(e);
     }
-  });
-
-  await player.load("https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/xperu6ixu9/out/v1/31d30c91fc65458789b84209d3fa22e4/cenc.mpd");
 }
 
 shaka.polyfill.installAll();
-init();
+
+if (shaka.Player.isBrowserSupported()) {
+    initPlayer();
+} else {
+    console.error("Browser not supported");
+}
 </script>
 
 </body>
