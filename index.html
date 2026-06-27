@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.13.5/shaka-player.compiled.js"></script>
+</head>
+<body>
+
+<video id="video" controls autoplay width="100%"></video>
+
+<script>
+async function init() {
+  const video = document.getElementById('video');
+  const player = new shaka.Player(video);
+
+  player.configure({
+    drm: {
+      clearKeys: {
+        "YOUR_KID_HEX": "YOUR_KEY_HEX"
+      }
+    }
+  });
+
+  await player.load('https://example.com/manifest.mpd');
+}
+
+init().catch(console.error);
+</script>
+
+</body>
+</html>
