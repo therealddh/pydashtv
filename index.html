@@ -2,10 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Fixed Shaka ClearKey Player</title>
+<title>Advanced Shaka Player</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
 <style>
@@ -13,39 +12,23 @@ body {
   background:#111;
   color:white;
   font-family:Arial;
-  margin:0;
-  padding:0;
 }
 
 .container {
-  max-width:520px;
+  max-width:600px;
   margin:20px auto;
   display:flex;
   flex-direction:column;
   gap:10px;
+}
+
+input,button,select {
   padding:10px;
-}
-
-input,button {
-  padding:12px;
   font-size:14px;
-  border-radius:6px;
-  border:none;
-}
-
-button {
-  background:#007bff;
-  color:white;
-  cursor:pointer;
-}
-
-button:hover {
-  background:#0056b3;
 }
 
 video {
   width:100%;
-  margin-top:10px;
   background:black;
 }
 </style>
@@ -54,88 +37,169 @@ video {
 <body>
 
 <div class="container">
-  <input id="mpd" placeholder="https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/xperu6ixu9/out/v1/31d30c91fc65458789b84209d3fa22e4/cenc.mpd">
-  <input id="kid" placeholder="1f68713028d439ec03be07f56c1d6213">
-  <input id="key" placeholder="20093db6455160fffed4c394def3193d">
-  <button onclick="playStream()">Play Stream</button>
+
+  <input id="mpd" placeholder="MPD URL">
+  <input id="kid" placeholder="KID">
+  <input id="key" placeholder="KEY">
+
+  <button onclick="play()">Play</button>
+
+  <!-- CUSTOM CONTROLS -->
+  <button onclick="goLive()">🔴 Live</button>
+
+  <select id="quality" onchange="setQuality()">
+    <option value="-1">Auto Quality</option>
+  </select>
+
+  <select id="audio" onchange="setAudio()">
+    <option value="-1">Auto Audio</option>
+  </select>
+
+  <select id="speed" onchange="setSpeed()">
+    <option value="0.5">0.5x</option>
+    <option value="1" selected>1x</option>
+    <option value="1.5">1.5x</option>
+    <option value="2">2x</option>
+  </select>
 
   <video id="video" controls autoplay></video>
 </div>
 
 <script>
-let player = null;
+let player;
+let video;
+let tracks = [];
 
-function cleanHex(v) {
-  return v.replace(/-/g, '').trim().toLowerCase();
+function cleanHex(v){
+  return v.replace(/-/g,'').trim().toLowerCase();
 }
 
-async function initPlayer() {
-  const video = document.getElementById('video');
+async function init(){
+  video = document.getElementById('video');
 
   shaka.polyfill.installAll();
 
-  if (!shaka.Player.isBrowserSupported()) {
-    alert("Browser not supported for Shaka Player");
+  if(!shaka.Player.isBrowserSupported()){
+    alert("Not supported");
     return;
   }
 
   player = new shaka.Player(video);
 
-  player.addEventListener('error', (e) => {
-    console.error("Shaka Error:", e.detail);
+  player.addEventListener('error', e=>{
+    console.error(e.detail);
   });
 
-  console.log("Player initialized");
+  // Update tracks when loaded
+  player.addEventListener('trackschanged', updateTracks);
+
+  console.log("Player ready");
 }
 
-async function playStream() {
-  if (!player) {
-    alert("Player not initialized");
-    return;
-  }
-
+async function play(){
   const mpd = document.getElementById('mpd').value.trim();
   const kid = cleanHex(document.getElementById('kid').value);
   const key = cleanHex(document.getElementById('key').value);
 
-  if (!mpd || !kid || !key) {
-    alert("Please fill MPD, KID, KEY");
+  if(!mpd || !kid || !key){
+    alert("Fill all fields");
     return;
   }
 
-  if (kid.length !== 32 || key.length !== 32) {
-    alert("KID and KEY must be 32 hex characters");
-    return;
-  }
-
-  // Clear previous stream
-  try {
-    await player.unload();
-  } catch (e) {}
-
-  // Configure ClearKey DRM
   player.configure({
-    drm: {
-      clearKeys: {
-        [kid]: key
+    drm:{
+      clearKeys:{
+        [kid]:key
       }
     },
-    streaming: {
-      bufferingGoal: 20,
-      rebufferingGoal: 2
+    streaming:{
+      bufferingGoal:20,
+      rebufferingGoal:2
     }
   });
 
-  try {
+  try{
     await player.load(mpd);
-    console.log("Stream loaded successfully");
-  } catch (e) {
-    console.error("Load failed:", e);
-    alert("Error: " + e.message);
+    console.log("Loaded");
+
+    updateTracks();
+  }catch(e){
+    alert(e.message);
   }
 }
 
-window.addEventListener('load', initPlayer);
+/* ================= LIVE BUTTON ================= */
+function goLive(){
+  const seekRange = player.seekRange();
+  video.currentTime = seekRange.end;
+}
+
+/* ================= QUALITY ================= */
+function updateTracks(){
+  const trackList = player.getVariantTracks();
+
+  const quality = document.getElementById("quality");
+  quality.innerHTML = `<option value="-1">Auto Quality</option>`;
+
+  trackList.forEach((t, i)=>{
+    if(t.height){
+      let opt = document.createElement("option");
+      opt.value = t.id;
+      opt.text = `${t.height}p ${t.bandwidth/1000}kbps`;
+      quality.appendChild(opt);
+    }
+  });
+
+  updateAudio();
+}
+
+/* ================= SET QUALITY ================= */
+function setQuality(){
+  const val = document.getElementById("quality").value;
+
+  if(val == -1){
+    player.configure({abr:{enabled:true}});
+    return;
+  }
+
+  player.configure({abr:{enabled:false}});
+
+  const tracks = player.getVariantTracks();
+  const selected = tracks.find(t => t.id == val);
+
+  if(selected){
+    player.selectVariantTrack(selected, true);
+  }
+}
+
+/* ================= AUDIO ================= */
+function updateAudio(){
+  const audio = document.getElementById("audio");
+  const audioTracks = player.getAudioLanguagesAndRoles();
+
+  audio.innerHTML = `<option value="-1">Auto Audio</option>`;
+
+  audioTracks.forEach(t=>{
+    let opt = document.createElement("option");
+    opt.value = t.language;
+    opt.text = t.language;
+    audio.appendChild(opt);
+  });
+}
+
+function setAudio(){
+  const lang = document.getElementById("audio").value;
+  if(lang != "-1"){
+    player.selectAudioLanguage(lang);
+  }
+}
+
+/* ================= SPEED ================= */
+function setSpeed(){
+  video.playbackRate = parseFloat(document.getElementById("speed").value);
+}
+
+window.addEventListener("load", init);
 </script>
 
 </body>
