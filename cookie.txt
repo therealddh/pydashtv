@@ -1,1 +1,1 @@
-#EXTHTTP: {"cookie": "https://jiotvmblive.cdn.jio.com/bpk-tv/Asianet_News_MOB/WDVLive/index.mpd?minrate=80000&maxrate=3024000&__hdnea__=st=1784392913~exp=1784393033~acl=/bpk-tv/Asianet_News_MOB/WDVLive/*~hmac=8ef41d309cb6b9f5fcf32a345c3ada038ddac102de7ea032c8954ca190ba20e9"}
+#EXTHTTP: {"cookie": "https://jiotvmblive.cdn.jio.com/bpk-tv/Asianet_News_MOB/WDVLive/index.mpd?minrate=80000&maxrate=3024000&__hdnea__=st=1784400188~exp=1784400308~acl=/bpk-tv/Asianet_News_MOB/WDVLive/*~hmac=fc126d66cfe374749d00638269ecf6f7624a3110cbc2b1a4eb6ec1f7a362e94a"}
